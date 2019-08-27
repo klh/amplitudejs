@@ -19,7 +19,7 @@ let ConfigState = (function() {
    * @access public
    */
   function resetConfig() {
-    config.audio = new Audio();
+    config.audio = (typeof window !== 'undefined' ? new Audio() : null);
     config.active_metadata = {};
     config.active_album = "";
     config.active_index = 0;

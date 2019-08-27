@@ -88,7 +88,7 @@ var _package = __webpack_require__(59);
 module.exports = {
   version: _package.version,
 
-  audio: new Audio(),
+  audio: typeof window !== 'undefined' ? new Audio() : null,
 
   active_metadata: {},
 
@@ -1723,7 +1723,7 @@ var ConfigState = function () {
    * @access public
    */
   function resetConfig() {
-    _config2.default.audio = new Audio();
+    _config2.default.audio = typeof window !== 'undefined' ? new Audio() : null;
     _config2.default.active_metadata = {};
     _config2.default.active_album = "";
     _config2.default.active_index = 0;
