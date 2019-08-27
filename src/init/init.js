@@ -240,8 +240,8 @@ let Initializer = (function() {
                 config.context.resume();
               }
           });
-  
-      
+
+
 
           /*
             Set the user waveform settings if provided.
@@ -256,7 +256,7 @@ let Initializer = (function() {
           /*
             Initialize the waveform.
           */
-          WaveForm.init();
+          //WaveForm.init();
 
           /*
             If the user is registering visualizations on init,
@@ -716,10 +716,10 @@ let Initializer = (function() {
     }
   }
 
-  /** 
+  /**
    * Initializes the index of the song in the songs array so
    * we can reference it if needed
-   * 
+   *
    * @access private
    */
   function initializeDefaultSongIndexes(){

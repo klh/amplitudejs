@@ -4728,7 +4728,7 @@ var Initializer = function () {
         /*
           Initialize the waveform.
         */
-        _waveform2.default.init();
+        //WaveForm.init();
 
         /*
           If the user is registering visualizations on init,
@@ -5129,10 +5129,10 @@ var Initializer = function () {
     }
   }
 
-  /** 
+  /**
    * Initializes the index of the song in the songs array so
    * we can reference it if needed
-   * 
+   *
    * @access private
    */
   function initializeDefaultSongIndexes() {

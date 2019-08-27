@@ -3,11 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="b4d88da8-ea6c-4f49-a1d6-80cb7f594bc1" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/amplitude.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/amplitude.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/amplitude.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/dist/amplitude.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dist/amplitude.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/dist/amplitude.min.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/config.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utilities/configState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utilities/configState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/init/init.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/init/init.js" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
