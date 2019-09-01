@@ -9994,7 +9994,10 @@ var Fx = function () {
       /*
       Web Audio API is available, set the context in our config.
       */
-      _config2.default.context = new browserContext();
+      if (window && !window.audioContextHolder) {
+        window.audioContextHolder = new browserContext();
+      }
+      _config2.default.context = window.audioContextHolder;
 
       /*
       Create an analyzer that we will use in the context.
@@ -10292,9 +10295,9 @@ var Amplitude = function () {
 
   /**
    * Sets the playback speed
-   * 
+   *
    * Public Accessor: Amplitude.setPlaybackSpeed( speed )
-   * 
+   *
    * @access public
    */
   function setPlaybackSpeed(speed) {
@@ -10857,6 +10860,31 @@ var Amplitude = function () {
     Play the song
     */
     _core2.default.play();
+
+    /*
+      Sets the state of the player.
+    */
+    _configState2.default.setPlayerState();
+
+    /*
+    Sync all of the play pause buttons.
+    */
+    _playPauseElements2.default.sync();
+  }
+
+  /**
+   * Plays a song at the index passed in from the songs array.
+   *
+   * Public Accessor: Amplitude.playSongAtIndex( index )
+   *
+   * @access public
+   * @param {number} index 	- The number representing the song in the songs array.
+   */
+  function doStop() {
+    /*
+    Stop the current song.
+    */
+    _core2.default.stop();
 
     /*
       Sets the state of the player.
@@ -11445,11 +11473,12 @@ var Amplitude = function () {
     setSongInPlaylistVisualization: setSongInPlaylistVisualization,
     setGlobalVisualization: setGlobalVisualization,
     getVolume: getVolume,
-    setVolume: setVolume
+    setVolume: setVolume,
+    stop: doStop
   };
 }();
 
-/** 
+/**
  * Playback Speed Elements
  * @module visual/PlaybackSpeedElements
  */
