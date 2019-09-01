@@ -6144,6 +6144,7 @@ var Events = function () {
 
     document.addEventListener("routeNavigated", function () {
       _stop2.default.handle();
+      _debug2.default.writeMessage("Responding to routeNavigated");
     });
 
     /*
