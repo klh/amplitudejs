@@ -60,7 +60,7 @@ var Events = (function() {
     });
 
     document.addEventListener("routeNavigated", function(){
-    	Stop.handle();
+    	Stop.default.handle();
     	Debug.writeMessage("Responding to routeNavigated");
 	})
 
