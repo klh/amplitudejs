@@ -59,6 +59,10 @@ var Events = (function() {
       config.is_touch_moving = true;
     });
 
+    document.addEventListener("routeNavigated", function(){
+    	Stop.handle();
+	})
+
     /*
 			On touch end if it was a touch move event, set moving to
 			false

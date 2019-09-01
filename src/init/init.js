@@ -11,12 +11,6 @@ import config from "../config.js";
 import Core from "../core/core.js";
 
 /**
- * AmplitudeJS SoundCloud Module
- * @module soundcloud/SoundCloud
- */
-import SoundCloud from "../soundcloud/soundcloud.js";
-
-/**
  * Imports the utilities used by the main module.
  */
 /**
@@ -298,50 +292,11 @@ let Initializer = (function() {
 			When the preliminary config is ready, we are ready to proceed.
 		*/
     if (ready) {
-      /*
-				Copies over the soundcloud information to the global config
-				which will determine where we go from there.
-			*/
-      config.soundcloud_client =
-        userConfig.soundcloud_client != undefined
-          ? userConfig.soundcloud_client
-          : "";
 
-      /*
-				Checks if we want to use the art loaded from soundcloud.
-			*/
-      config.soundcloud_use_art =
-        userConfig.soundcloud_use_art != undefined
-          ? userConfig.soundcloud_use_art
-          : "";
-
-      /*
-				If the user provides a soundcloud client then we assume that
-				there are URLs in their songs that will reference SoundCloud.
-				We then copy over the user config they provided to the
-				temp_user_config so we don't mess up the global or their configs
-				and load the soundcloud information.
-			*/
       let tempUserConfig = {};
 
-      /*
-        If there's a soundcloud_client key set, we load the SoundCloud data
-        for all of the songs in the array.
-      */
-      if (config.soundcloud_client != "") {
-        tempUserConfig = userConfig;
 
-        /*
-					Load up SoundCloud for use with AmplitudeJS.
-				*/
-        SoundCloud.loadSoundCloud(tempUserConfig);
-      } else {
-        /*
-					The user is not using Soundcloud with Amplitude at this point
-					so we just finish the configuration with the users's preferences.
-				*/
         setConfig(userConfig);
-      }
     }
 
     /*
