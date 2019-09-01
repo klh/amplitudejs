@@ -876,7 +876,7 @@ var _songSliderElements = __webpack_require__(14);
 
 var _songSliderElements2 = _interopRequireDefault(_songSliderElements);
 
-var _songPlayedProgressElements = __webpack_require__(20);
+var _songPlayedProgressElements = __webpack_require__(19);
 
 var _songPlayedProgressElements2 = _interopRequireDefault(_songPlayedProgressElements);
 
@@ -3727,308 +3727,6 @@ var _config = __webpack_require__(0);
 
 var _config2 = _interopRequireDefault(_config);
 
-var _init = __webpack_require__(21);
-
-var _init2 = _interopRequireDefault(_init);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * These helpers wrap around the basic methods of the Soundcloud API
- * and get the information we need from SoundCloud to make the songs
- * streamable through Amplitude
- *
- * @module soundcloud/SoundCloud
- */
-/**
- * Imports the config module
- * @module config
- */
-var SoundCloud = function () {
-  /**
-   * Defines the temporary user config used while we configure soundcloud
-   * @type {object}
-   */
-  var tempUserConfig = {};
-
-  /**
-   * Loads the soundcloud SDK for use with Amplitude so the user doesn't have
-   * to load it themselves.
-   * With help from: http://stackoverflow.com/questions/950087/include-a-javascript-file-in-another-javascript-file
-   *
-   * @access public
-   * @param {object} userConfig 	- The config defined by the user for AmplitudeJS
-   */
-  function loadSoundCloud(userConfig) {
-    /*
-    Sets the temporary config to the config passed by the user so we can make changes
-    and not break the actual config.
-    */
-    tempUserConfig = userConfig;
-
-    /*
-    Gets the head tag for the document and create a script element.
-    */
-    var head = document.getElementsByTagName("head")[0];
-    var script = document.createElement("script");
-
-    script.type = "text/javascript";
-
-    /*
-    URL to the remote soundcloud SDK
-    */
-    script.src = "https://connect.soundcloud.com/sdk.js";
-    script.onreadystatechange = initSoundcloud;
-    script.onload = initSoundcloud;
-
-    /*
-    Add the script to the head of the document.
-    */
-    head.appendChild(script);
-  }
-
-  /**
-   * Initializes soundcloud with the key provided.
-   *
-   * @access private
-   */
-  function initSoundcloud() {
-    /*
-    Calls the SoundCloud initialize function
-    from their API and sends it the client_id
-    that the user passed in.
-    */
-    SC.initialize({
-      client_id: _config2.default.soundcloud_client
-    });
-
-    /*
-    Gets the streamable URLs to run through Amplitue. This is
-    VERY important since Amplitude can't stream the copy and pasted
-    link from the SoundCloud page, but can resolve the streaming
-    URLs from the link.
-    */
-    getStreamableURLs();
-  }
-
-  /**
-   * Gets the streamable URL from the URL provided for
-   * all of the soundcloud links.  This will loop through
-   * and set all of the information for the soundcloud
-   * urls.
-   *
-   * @access private
-   */
-  function getStreamableURLs() {
-    /*
-    Define the regex to find the soundcloud URLs
-    */
-    var soundcloud_regex = /^https?:\/\/(soundcloud.com|snd.sc)\/(.*)$/;
-
-    for (var i = 0; i < _config2.default.songs.length; i++) {
-      /*
-      If the URL matches soundcloud, we grab
-      that url and get the streamable link
-      if there is one.
-      */
-      if (_config2.default.songs[i].url.match(soundcloud_regex)) {
-        _config2.default.soundcloud_song_count++;
-        resolveStreamable(_config2.default.songs[i].url, i);
-      }
-    }
-  }
-
-  /**
-   * Resolves an individual streamable URL.
-   *
-   * @param {string} url - The URL of the SoundCloud song to get the streamable URL from.
-   * @param {string} playlist - The playlist we are getting the streamable URL for.
-   * @param {Integer} index - The index of the song in the playlist or the songs array.
-   * @param {boolean} addToShuffleList - Whether we add to the shuffle list for the songs or playlist.
-   *
-   */
-  function resolveIndividualStreamableURL(url, playlist, index) {
-    var addToShuffleList = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
-
-    SC.get("/resolve/?url=" + url, function (sound) {
-      /*
-        If streamable we get the url and bind the client ID to the end
-        so Amplitude can just stream the song normally. We then overwrite
-        the url the user provided with the streamable URL.
-      */
-      if (sound.streamable) {
-        if (playlist != null) {
-          _config2.default.playlists[playlist].songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
-
-          if (addToShuffleList) {
-            _config2.default.playlists[playlist].shuffle_list[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
-          }
-          /*
-            If the user want's to use soundcloud art, we overwrite the
-            cover_art_url with the soundcloud artwork url.
-          */
-          if (_config2.default.soundcloud_use_art) {
-            _config2.default.playlists[playlist].songs[index].cover_art_url = sound.artwork_url;
-
-            if (addToShuffleList) {
-              _config2.default.playlists[playlist].shuffle_list[index].cover_art_url = sound.artwork_url;
-            }
-          }
-
-          /*
-            Grab the extra metadata from soundcloud and bind it to the
-            song.  The user can get this through the public function:
-            getActiveSongMetadata
-          */
-          _config2.default.playlists[playlist].songs[index].soundcloud_data = sound;
-
-          if (addToShuffleList) {
-            _config2.default.playlists[playlist].shuffle_list[index].soundcloud_data = sound;
-          }
-        } else {
-          _config2.default.songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
-
-          if (addToShuffleList) {
-            _config2.default.shuffle_list[index].stream_url + "?client_id=" + _config2.default.soundcloud_client;
-          }
-
-          /*
-            If the user want's to use soundcloud art, we overwrite the
-            cover_art_url with the soundcloud artwork url.
-          */
-          if (_config2.default.soundcloud_use_art) {
-            _config2.default.songs[index].cover_art_url = sound.artwork_url;
-
-            if (addToShuffleList) {
-              _config2.default.shuffle_list[index].cover_art_url = sound.artwork_url;
-            }
-          }
-
-          /*
-            Grab the extra metadata from soundcloud and bind it to the
-            song.  The user can get this through the public function:
-            getActiveSongMetadata
-          */
-          _config2.default.songs[index].soundcloud_data = sound;
-
-          if (addToShuffleList) {
-            _config2.default.shuffle_list[index].soundcloud_data = sound;
-          }
-        }
-      } else {
-        if (playlist != null) {
-          AmplitudeHelpers.writeDebugMessage(_config2.default.playlists[playlist].songs[index].name + " by " + _config2.default.playlists[playlist].songs[index].artist + " is not streamable by the Soundcloud API");
-        } else {
-          /*
-            If not streamable, then we print a message to the user stating
-            that the song with name X and artist X is not streamable. This
-            gets printed ONLY if they have debug turned on.
-          */
-          AmplitudeHelpers.writeDebugMessage(_config2.default.songs[index].name + " by " + _config2.default.songs[index].artist + " is not streamable by the Soundcloud API");
-        }
-      }
-    });
-  }
-
-  /**
-   * Due to Soundcloud SDK being asynchronous, we need to scope the
-   * index of the song in another function. The privateGetSoundcloudStreamableURLs
-   * function does the actual iteration and scoping.
-   *
-   * @access private
-   * @param {string} url 		- URL of the soundcloud song
-   * @param {number} index 	- The index of the soundcloud song in the songs array.
-   */
-  function resolveStreamable(url, index) {
-    SC.get("/resolve/?url=" + url, function (sound) {
-      /*
-      If streamable we get the url and bind the client ID to the end
-      so Amplitude can just stream the song normally. We then overwrite
-      the url the user provided with the streamable URL.
-      */
-      if (sound.streamable) {
-        _config2.default.songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
-
-        /*
-        If the user want's to use soundcloud art, we overwrite the
-        cover_art_url with the soundcloud artwork url.
-        */
-        if (_config2.default.soundcloud_use_art) {
-          _config2.default.songs[index].cover_art_url = sound.artwork_url;
-        }
-
-        /*
-        Grab the extra metadata from soundcloud and bind it to the
-        song.  The user can get this through the public function:
-        getActiveSongMetadata
-        */
-        _config2.default.songs[index].soundcloud_data = sound;
-      } else {
-        /*
-        If not streamable, then we print a message to the user stating
-        that the song with name X and artist X is not streamable. This
-        gets printed ONLY if they have debug turned on.
-        */
-        AmplitudeHelpers.writeDebugMessage(_config2.default.songs[index].name + " by " + _config2.default.songs[index].artist + " is not streamable by the Soundcloud API");
-      }
-      /*
-      Increments the song ready counter.
-      */
-      _config2.default.soundcloud_songs_ready++;
-
-      /*
-      When all songs are accounted for, then amplitude is ready
-      to rock and we set the rest of the config.
-      */
-      if (_config2.default.soundcloud_songs_ready == _config2.default.soundcloud_song_count) {
-        _init2.default.setConfig(tempUserConfig);
-      }
-    });
-  }
-
-  /**
-   * Determines if a given URL is a SoundCloud URL.
-   *
-   * @param {string} url - The URL to test if it's a SoundCloud URL.
-   */
-  function isSoundCloudURL(url) {
-    var soundcloud_regex = /^https?:\/\/(soundcloud.com|snd.sc)\/(.*)$/;
-
-    return url.match(soundcloud_regex);
-  }
-
-  /*
-  Returns the publically accessible methods
-  */
-  return {
-    loadSoundCloud: loadSoundCloud,
-    resolveIndividualStreamableURL: resolveIndividualStreamableURL,
-    isSoundCloudURL: isSoundCloudURL
-  };
-}();
-
-/**
- * Imports the initializer
- * @module init/AmplitudeInitializer
- */
-exports.default = SoundCloud;
-module.exports = exports["default"];
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _config = __webpack_require__(0);
-
-var _config2 = _interopRequireDefault(_config);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
@@ -4093,7 +3791,7 @@ exports.default = PlaybackSpeedElements;
 module.exports = exports["default"];
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4198,7 +3896,7 @@ exports.default = ShuffleElements;
 module.exports = exports["default"];
 
 /***/ }),
-/* 20 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4380,7 +4078,7 @@ exports.default = SongPlayedProgressElements;
 module.exports = exports["default"];
 
 /***/ }),
-/* 21 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -4399,12 +4097,6 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 /**
  * AmplitudeJS Core Module
  * @module core/Core
- */
-
-
-/**
- * AmplitudeJS SoundCloud Module
- * @module soundcloud/SoundCloud
  */
 
 
@@ -4533,10 +4225,6 @@ var _core = __webpack_require__(1);
 
 var _core2 = _interopRequireDefault(_core);
 
-var _soundcloud = __webpack_require__(17);
-
-var _soundcloud2 = _interopRequireDefault(_soundcloud);
-
 var _configState = __webpack_require__(6);
 
 var _configState2 = _interopRequireDefault(_configState);
@@ -4581,7 +4269,7 @@ var _playlists = __webpack_require__(48);
 
 var _playlists2 = _interopRequireDefault(_playlists);
 
-var _shuffleElements = __webpack_require__(19);
+var _shuffleElements = __webpack_require__(18);
 
 var _shuffleElements2 = _interopRequireDefault(_shuffleElements);
 
@@ -4605,7 +4293,7 @@ var _metaDataElements = __webpack_require__(8);
 
 var _metaDataElements2 = _interopRequireDefault(_metaDataElements);
 
-var _playbackSpeedElements = __webpack_require__(18);
+var _playbackSpeedElements = __webpack_require__(17);
 
 var _playbackSpeedElements2 = _interopRequireDefault(_playbackSpeedElements);
 
@@ -4762,44 +4450,10 @@ var Initializer = function () {
     When the preliminary config is ready, we are ready to proceed.
     */
     if (ready) {
-      /*
-      Copies over the soundcloud information to the global config
-      which will determine where we go from there.
-      */
-      _config2.default.soundcloud_client = userConfig.soundcloud_client != undefined ? userConfig.soundcloud_client : "";
 
-      /*
-      Checks if we want to use the art loaded from soundcloud.
-      */
-      _config2.default.soundcloud_use_art = userConfig.soundcloud_use_art != undefined ? userConfig.soundcloud_use_art : "";
-
-      /*
-      If the user provides a soundcloud client then we assume that
-      there are URLs in their songs that will reference SoundCloud.
-      We then copy over the user config they provided to the
-      temp_user_config so we don't mess up the global or their configs
-      and load the soundcloud information.
-      */
       var tempUserConfig = {};
 
-      /*
-        If there's a soundcloud_client key set, we load the SoundCloud data
-        for all of the songs in the array.
-      */
-      if (_config2.default.soundcloud_client != "") {
-        tempUserConfig = userConfig;
-
-        /*
-        Load up SoundCloud for use with AmplitudeJS.
-        */
-        _soundcloud2.default.loadSoundCloud(tempUserConfig);
-      } else {
-        /*
-        The user is not using Soundcloud with Amplitude at this point
-        so we just finish the configuration with the users's preferences.
-        */
-        setConfig(userConfig);
-      }
+      setConfig(userConfig);
     }
 
     /*
@@ -5152,6 +4806,308 @@ var Initializer = function () {
 }();
 
 exports.default = Initializer;
+module.exports = exports["default"];
+
+/***/ }),
+/* 21 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _config = __webpack_require__(0);
+
+var _config2 = _interopRequireDefault(_config);
+
+var _init = __webpack_require__(20);
+
+var _init2 = _interopRequireDefault(_init);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * These helpers wrap around the basic methods of the Soundcloud API
+ * and get the information we need from SoundCloud to make the songs
+ * streamable through Amplitude
+ *
+ * @module soundcloud/SoundCloud
+ */
+/**
+ * Imports the config module
+ * @module config
+ */
+var SoundCloud = function () {
+  /**
+   * Defines the temporary user config used while we configure soundcloud
+   * @type {object}
+   */
+  var tempUserConfig = {};
+
+  /**
+   * Loads the soundcloud SDK for use with Amplitude so the user doesn't have
+   * to load it themselves.
+   * With help from: http://stackoverflow.com/questions/950087/include-a-javascript-file-in-another-javascript-file
+   *
+   * @access public
+   * @param {object} userConfig 	- The config defined by the user for AmplitudeJS
+   */
+  function loadSoundCloud(userConfig) {
+    /*
+    Sets the temporary config to the config passed by the user so we can make changes
+    and not break the actual config.
+    */
+    tempUserConfig = userConfig;
+
+    /*
+    Gets the head tag for the document and create a script element.
+    */
+    var head = document.getElementsByTagName("head")[0];
+    var script = document.createElement("script");
+
+    script.type = "text/javascript";
+
+    /*
+    URL to the remote soundcloud SDK
+    */
+    script.src = "https://connect.soundcloud.com/sdk.js";
+    script.onreadystatechange = initSoundcloud;
+    script.onload = initSoundcloud;
+
+    /*
+    Add the script to the head of the document.
+    */
+    head.appendChild(script);
+  }
+
+  /**
+   * Initializes soundcloud with the key provided.
+   *
+   * @access private
+   */
+  function initSoundcloud() {
+    /*
+    Calls the SoundCloud initialize function
+    from their API and sends it the client_id
+    that the user passed in.
+    */
+    SC.initialize({
+      client_id: _config2.default.soundcloud_client
+    });
+
+    /*
+    Gets the streamable URLs to run through Amplitue. This is
+    VERY important since Amplitude can't stream the copy and pasted
+    link from the SoundCloud page, but can resolve the streaming
+    URLs from the link.
+    */
+    getStreamableURLs();
+  }
+
+  /**
+   * Gets the streamable URL from the URL provided for
+   * all of the soundcloud links.  This will loop through
+   * and set all of the information for the soundcloud
+   * urls.
+   *
+   * @access private
+   */
+  function getStreamableURLs() {
+    /*
+    Define the regex to find the soundcloud URLs
+    */
+    var soundcloud_regex = /^https?:\/\/(soundcloud.com|snd.sc)\/(.*)$/;
+
+    for (var i = 0; i < _config2.default.songs.length; i++) {
+      /*
+      If the URL matches soundcloud, we grab
+      that url and get the streamable link
+      if there is one.
+      */
+      if (_config2.default.songs[i].url.match(soundcloud_regex)) {
+        _config2.default.soundcloud_song_count++;
+        resolveStreamable(_config2.default.songs[i].url, i);
+      }
+    }
+  }
+
+  /**
+   * Resolves an individual streamable URL.
+   *
+   * @param {string} url - The URL of the SoundCloud song to get the streamable URL from.
+   * @param {string} playlist - The playlist we are getting the streamable URL for.
+   * @param {Integer} index - The index of the song in the playlist or the songs array.
+   * @param {boolean} addToShuffleList - Whether we add to the shuffle list for the songs or playlist.
+   *
+   */
+  function resolveIndividualStreamableURL(url, playlist, index) {
+    var addToShuffleList = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : false;
+
+    SC.get("/resolve/?url=" + url, function (sound) {
+      /*
+        If streamable we get the url and bind the client ID to the end
+        so Amplitude can just stream the song normally. We then overwrite
+        the url the user provided with the streamable URL.
+      */
+      if (sound.streamable) {
+        if (playlist != null) {
+          _config2.default.playlists[playlist].songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
+
+          if (addToShuffleList) {
+            _config2.default.playlists[playlist].shuffle_list[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
+          }
+          /*
+            If the user want's to use soundcloud art, we overwrite the
+            cover_art_url with the soundcloud artwork url.
+          */
+          if (_config2.default.soundcloud_use_art) {
+            _config2.default.playlists[playlist].songs[index].cover_art_url = sound.artwork_url;
+
+            if (addToShuffleList) {
+              _config2.default.playlists[playlist].shuffle_list[index].cover_art_url = sound.artwork_url;
+            }
+          }
+
+          /*
+            Grab the extra metadata from soundcloud and bind it to the
+            song.  The user can get this through the public function:
+            getActiveSongMetadata
+          */
+          _config2.default.playlists[playlist].songs[index].soundcloud_data = sound;
+
+          if (addToShuffleList) {
+            _config2.default.playlists[playlist].shuffle_list[index].soundcloud_data = sound;
+          }
+        } else {
+          _config2.default.songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
+
+          if (addToShuffleList) {
+            _config2.default.shuffle_list[index].stream_url + "?client_id=" + _config2.default.soundcloud_client;
+          }
+
+          /*
+            If the user want's to use soundcloud art, we overwrite the
+            cover_art_url with the soundcloud artwork url.
+          */
+          if (_config2.default.soundcloud_use_art) {
+            _config2.default.songs[index].cover_art_url = sound.artwork_url;
+
+            if (addToShuffleList) {
+              _config2.default.shuffle_list[index].cover_art_url = sound.artwork_url;
+            }
+          }
+
+          /*
+            Grab the extra metadata from soundcloud and bind it to the
+            song.  The user can get this through the public function:
+            getActiveSongMetadata
+          */
+          _config2.default.songs[index].soundcloud_data = sound;
+
+          if (addToShuffleList) {
+            _config2.default.shuffle_list[index].soundcloud_data = sound;
+          }
+        }
+      } else {
+        if (playlist != null) {
+          AmplitudeHelpers.writeDebugMessage(_config2.default.playlists[playlist].songs[index].name + " by " + _config2.default.playlists[playlist].songs[index].artist + " is not streamable by the Soundcloud API");
+        } else {
+          /*
+            If not streamable, then we print a message to the user stating
+            that the song with name X and artist X is not streamable. This
+            gets printed ONLY if they have debug turned on.
+          */
+          AmplitudeHelpers.writeDebugMessage(_config2.default.songs[index].name + " by " + _config2.default.songs[index].artist + " is not streamable by the Soundcloud API");
+        }
+      }
+    });
+  }
+
+  /**
+   * Due to Soundcloud SDK being asynchronous, we need to scope the
+   * index of the song in another function. The privateGetSoundcloudStreamableURLs
+   * function does the actual iteration and scoping.
+   *
+   * @access private
+   * @param {string} url 		- URL of the soundcloud song
+   * @param {number} index 	- The index of the soundcloud song in the songs array.
+   */
+  function resolveStreamable(url, index) {
+    SC.get("/resolve/?url=" + url, function (sound) {
+      /*
+      If streamable we get the url and bind the client ID to the end
+      so Amplitude can just stream the song normally. We then overwrite
+      the url the user provided with the streamable URL.
+      */
+      if (sound.streamable) {
+        _config2.default.songs[index].url = sound.stream_url + "?client_id=" + _config2.default.soundcloud_client;
+
+        /*
+        If the user want's to use soundcloud art, we overwrite the
+        cover_art_url with the soundcloud artwork url.
+        */
+        if (_config2.default.soundcloud_use_art) {
+          _config2.default.songs[index].cover_art_url = sound.artwork_url;
+        }
+
+        /*
+        Grab the extra metadata from soundcloud and bind it to the
+        song.  The user can get this through the public function:
+        getActiveSongMetadata
+        */
+        _config2.default.songs[index].soundcloud_data = sound;
+      } else {
+        /*
+        If not streamable, then we print a message to the user stating
+        that the song with name X and artist X is not streamable. This
+        gets printed ONLY if they have debug turned on.
+        */
+        AmplitudeHelpers.writeDebugMessage(_config2.default.songs[index].name + " by " + _config2.default.songs[index].artist + " is not streamable by the Soundcloud API");
+      }
+      /*
+      Increments the song ready counter.
+      */
+      _config2.default.soundcloud_songs_ready++;
+
+      /*
+      When all songs are accounted for, then amplitude is ready
+      to rock and we set the rest of the config.
+      */
+      if (_config2.default.soundcloud_songs_ready == _config2.default.soundcloud_song_count) {
+        _init2.default.setConfig(tempUserConfig);
+      }
+    });
+  }
+
+  /**
+   * Determines if a given URL is a SoundCloud URL.
+   *
+   * @param {string} url - The URL to test if it's a SoundCloud URL.
+   */
+  function isSoundCloudURL(url) {
+    var soundcloud_regex = /^https?:\/\/(soundcloud.com|snd.sc)\/(.*)$/;
+
+    return url.match(soundcloud_regex);
+  }
+
+  /*
+  Returns the publically accessible methods
+  */
+  return {
+    loadSoundCloud: loadSoundCloud,
+    resolveIndividualStreamableURL: resolveIndividualStreamableURL,
+    isSoundCloudURL: isSoundCloudURL
+  };
+}();
+
+/**
+ * Imports the initializer
+ * @module init/AmplitudeInitializer
+ */
+exports.default = SoundCloud;
 module.exports = exports["default"];
 
 /***/ }),
@@ -6184,6 +6140,10 @@ var Events = function () {
     */
     document.addEventListener("touchmove", function () {
       _config2.default.is_touch_moving = true;
+    });
+
+    document.addEventListener("routeNavigated", function () {
+      _stop2.default.handle();
     });
 
     /*
@@ -8330,7 +8290,7 @@ var _core = __webpack_require__(1);
 
 var _core2 = _interopRequireDefault(_core);
 
-var _playbackSpeedElements = __webpack_require__(18);
+var _playbackSpeedElements = __webpack_require__(17);
 
 var _playbackSpeedElements2 = _interopRequireDefault(_playbackSpeedElements);
 
@@ -8832,7 +8792,7 @@ var _shuffler = __webpack_require__(13);
 
 var _shuffler2 = _interopRequireDefault(_shuffler);
 
-var _shuffleElements = __webpack_require__(19);
+var _shuffleElements = __webpack_require__(18);
 
 var _shuffleElements2 = _interopRequireDefault(_shuffleElements);
 
@@ -9480,7 +9440,7 @@ var _songSliderElements = __webpack_require__(14);
 
 var _songSliderElements2 = _interopRequireDefault(_songSliderElements);
 
-var _songPlayedProgressElements = __webpack_require__(20);
+var _songPlayedProgressElements = __webpack_require__(19);
 
 var _songPlayedProgressElements2 = _interopRequireDefault(_songPlayedProgressElements);
 
@@ -10134,7 +10094,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _init = __webpack_require__(21);
+var _init = __webpack_require__(20);
 
 var _init2 = _interopRequireDefault(_init);
 
@@ -10170,7 +10130,7 @@ var _visualizations = __webpack_require__(16);
 
 var _visualizations2 = _interopRequireDefault(_visualizations);
 
-var _shuffleElements = __webpack_require__(19);
+var _shuffleElements = __webpack_require__(18);
 
 var _shuffleElements2 = _interopRequireDefault(_shuffleElements);
 
@@ -10182,7 +10142,7 @@ var _songSliderElements = __webpack_require__(14);
 
 var _songSliderElements2 = _interopRequireDefault(_songSliderElements);
 
-var _songPlayedProgressElements = __webpack_require__(20);
+var _songPlayedProgressElements = __webpack_require__(19);
 
 var _songPlayedProgressElements2 = _interopRequireDefault(_songPlayedProgressElements);
 
@@ -10198,7 +10158,7 @@ var _metaDataElements = __webpack_require__(8);
 
 var _metaDataElements2 = _interopRequireDefault(_metaDataElements);
 
-var _playbackSpeedElements = __webpack_require__(18);
+var _playbackSpeedElements = __webpack_require__(17);
 
 var _playbackSpeedElements2 = _interopRequireDefault(_playbackSpeedElements);
 
@@ -10206,7 +10166,7 @@ var _debug = __webpack_require__(4);
 
 var _debug2 = _interopRequireDefault(_debug);
 
-var _soundcloud = __webpack_require__(17);
+var _soundcloud = __webpack_require__(21);
 
 var _soundcloud2 = _interopRequireDefault(_soundcloud);
 
@@ -11581,7 +11541,7 @@ var _metaDataElements = __webpack_require__(8);
 
 var _metaDataElements2 = _interopRequireDefault(_metaDataElements);
 
-var _soundcloud = __webpack_require__(17);
+var _soundcloud = __webpack_require__(21);
 
 var _soundcloud2 = _interopRequireDefault(_soundcloud);
 
@@ -13355,7 +13315,7 @@ module.exports = exports["default"];
 /* 59 */
 /***/ (function(module, exports) {
 
-module.exports = {"name":"amplitudejs","version":"5.0.2","description":"A JavaScript library that allows you to control the design of your media controls in your webpage -- not the browser. No dependencies (jQuery not required) https://521dimensions.com/open-source/amplitudejs","main":"dist/amplitude.js","devDependencies":{"babel-core":"^6.26.3","babel-loader":"^7.1.5","babel-plugin-add-module-exports":"0.2.1","babel-polyfill":"^6.26.0","babel-preset-es2015":"^6.18.0","husky":"^1.3.1","jest":"^23.6.0","prettier":"1.15.1","pretty-quick":"^1.11.1","watch":"^1.0.2","webpack":"^2.7.0"},"directories":{"doc":"docs"},"files":["dist"],"scripts":{"build":"node_modules/.bin/webpack","watch":"watch 'node_modules/.bin/webpack' dist","prettier":"npx pretty-quick","test":"jest"},"repository":{"type":"git","url":"git+https://github.com/521dimensions/amplitudejs.git"},"keywords":["webaudio","html5","javascript","audio-player"],"author":"521 Dimensions (https://521dimensions.com)","license":"MIT","bugs":{"url":"https://github.com/521dimensions/amplitudejs/issues"},"homepage":"https://github.com/521dimensions/amplitudejs#readme"}
+module.exports = {"name":"amplitudejs","version":"5.0.3","description":"A JavaScript library that allows you to control the design of your media controls in your webpage -- not the browser. No dependencies (jQuery not required) https://521dimensions.com/open-source/amplitudejs","main":"dist/amplitude.js","devDependencies":{"babel-core":"^6.26.3","babel-loader":"^7.1.5","babel-plugin-add-module-exports":"0.2.1","babel-polyfill":"^6.26.0","babel-preset-es2015":"^6.18.0","husky":"^1.3.1","jest":"^23.6.0","prettier":"1.15.1","pretty-quick":"^1.11.1","watch":"^1.0.2","webpack":"^2.7.0"},"directories":{"doc":"docs"},"files":["dist"],"scripts":{"build":"node_modules/.bin/webpack","watch":"watch 'node_modules/.bin/webpack' dist","prettier":"npx pretty-quick","test":"jest"},"repository":{"type":"git","url":"git+https://github.com/521dimensions/amplitudejs.git"},"keywords":["webaudio","html5","javascript","audio-player"],"author":"521 Dimensions (https://521dimensions.com)","license":"MIT","bugs":{"url":"https://github.com/521dimensions/amplitudejs/issues"},"homepage":"https://github.com/521dimensions/amplitudejs#readme"}
 
 /***/ })
 /******/ ]);
